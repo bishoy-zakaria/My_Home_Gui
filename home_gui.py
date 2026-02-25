@@ -4,6 +4,7 @@ from firebase_admin import credentials, db
 import hashlib
 import json
 import os
+import time
 
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
@@ -23,6 +24,7 @@ def init_firebase():
                     fb_credentials["private_key"] = fb_credentials["private_key"]
                     cred = credentials.Certificate(fb_credentials)
                     firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                    time.sleep(5)
                     return len(firebase_admin._apps) > 0
         
             else:
