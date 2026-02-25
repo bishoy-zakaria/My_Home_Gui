@@ -12,23 +12,24 @@ FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
 @st.cache_resource
 def init_firebase():
     try:
-        if not firebase_admin._apps:
-            # Check for Streamlit Cloud Secrets
-            if "firebase" in st.secrets:
-                fb_credentials = dict(st.secrets["firebase"])
-                
-                # --- THE FIX ---
-                # This ensures any literal "\n" strings are converted to actual newlines
-                # and removes any accidental double-backslashes.
-                if "private_key" in fb_credentials:
-                    fb_credentials["private_key"] = fb_credentials["private_key"]
-                    cred = credentials.Certificate(fb_credentials)
-                    firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
-                    time.sleep(5)
-                    return len(firebase_admin._apps) > 0
         
-            else:
-                return False
+        # Check for Streamlit Cloud Secrets
+        if "firebase" in st.secrets:
+            fb_credentials = dict(st.secrets["firebase"])
+            
+            # --- THE FIX ---
+            # This ensures any literal "\n" strings are converted to actual newlines
+            # and removes any accidental double-backslashes.
+            if "private_key" in fb_credentials:
+                fb_credentials["private_key"] = fb_credentials["private_key"]
+                cred = credentials.Certificate(fb_credentials)
+                firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                time.sleep(5)
+                return len(firebase_admin._apps) > 0
+    
+        else:
+            st.error(f"⚠️ firebase is not in secrets{e}")
+            return False
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
         return False
