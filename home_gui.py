@@ -26,6 +26,10 @@ def init_firebase():
                 firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
                 time.sleep(5)
                 return len(firebase_admin._apps) > 0
+            else:
+                st.error(f"⚠️ private_key is not in fb_credentials")
+                return False
+
     
         else:
             st.error(f"⚠️ firebase is not in secrets{e}")
