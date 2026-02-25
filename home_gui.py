@@ -23,7 +23,7 @@ def init_firebase():
                     fb_credentials["private_key"] = fb_credentials["private_key"]
                     cred = credentials.Certificate(fb_credentials)
                     firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
-                    return True
+                    return len(firebase_admin._apps) > 0
         
             else:
                 return False
