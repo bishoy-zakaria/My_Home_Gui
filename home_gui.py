@@ -59,7 +59,9 @@ def sync_to_firebase(node_name, value):
 def fetch_initial_state():
     if not firebase_ready: return
     try:
+        st.warning("7mada1")
         ref = db.reference("users/Reciption")
+        st.warning("7mada2")
         data = ref.get()
         st.warning(data)
         if data:
