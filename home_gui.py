@@ -7,20 +7,34 @@ import os
 
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
-CERT_FILE = "my-home-a6d27-firebase-adminsdk-fbsvc-795dff0005.json"
 
-with open(CERT_FILE) as f:
-    service_account_info = json.load(f)
-    service_account_info["private_key"] = "-----BEGIN PRIVATE KEY-----\nMIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDefCEIbJRhBf2L\nv7sUKjspSLhG9oWR79AwDhrAJ1Ew8qRJh8WMWHJpOejPNtnla0M1OJHEGFPMPcsB\nrOPmU8HOUqcxmj/rTz3SU51/QH9ubUU/ZFYe3sab4v5F2FdKzkcNRkAA9F7/dWAR\nIgVWyPH166AdIRsU/klnUs/EjU8D4FUHRHFV32blSF7bMv90O2oCTKhl8kU0UGO2\np262Kwsb0EhDv/gifAH0q9lc9pg5EOZ/2W10ZT8bBhUuMmzOUEdyv2TO9z35azv+\n9PrQwa++oZuPYPwFy3MSFZ/uvgweAQx0+2vdEFKD9Q80a6HgsAl7N2b1vpo7UTy1\noO+Sy7uZAgMBAAECggEAU8DIsqIlTUzzAIvBwjqPoN/2NwiQibqMVbrJiTKD1vhQ\nrjmFPWsCTuh04qSUbE/vsfZEsVwzF3zfkhbiiA9ZsvDcbcjSbSOcczP04zWFgy1x\nVwbPgLl+bKqL7AEgA1IZ3z5l07YqmOI3sttqxRvKMjhsQur2hfWf7lx3SFeluiAi\nUuRh4SytKw5HZJroDC7Qtz6tlF2qoJTGX9/m6Co2aseY9tBxgokfaeJILqIuhZWv\nSDCD4wX1WEA2hKjpytKIVwP7eo7hhIfWtcMqJnOuhXdT6nteEUs9uoqeycuptvey\nh9OzQxvDzCoHqdpjCB1DHYBCe8pkCW6682dEhglHXQKBgQDvplpUJJL6A7iHmR3i\nXAP207c2YQ22S/itbXYvq1NRRvUvC4N+cZxKNkAyRYQ1Rk4YoVybuRaueJfhJjqj\njujVgY5ucQiwEM/PgQsKhQpA+5wA3ano5dhF0Gv59ivRN4NOizNjeGcXmpxSKQg9\nr0VMA8qLRALboWekE25BKLQYiwKBgQDtqfqYKMtbsJ8UUKM+tA2aMns0dF2XJ4Vz\nzpSCulm6TGoUaTrntrg+8J11oJ8BDEOusFha8hYaMb7kzAyYyBIAum5LBgyQAsNB\nw+z9glSAu4LFz44fhJbDUGoeoBCceZW/ftFEWdaI/u6BTCh+yG8ty5CYXuNlKDq3\nViALt54c6wKBgQDA6dTE7zwxblVZMnTQBupaA0v0xmPXX4ircvY0oWHMh6ZPXKFZ\nY/M/+jPrQ/KNQC8VvK9j27bac9EvOSrzBtN/K2+QkAVCVgYzL9nHehkq/mAygj2I\ncZ2LdZ+18+iJ3nog/AU+CWpToe48ZTNxFGpgKp0dRn5WdrOLbOjQIwf2yQKBgQCi\nGbnOZqStmT4ngQiXD//nGF9oW6YqHs6rOk+ZCrmAk/YWjd+bg8kPRNZhEHjjIhZX\n4/efsFba7usg6vv8iRmeXYo0qZ+P6hJ7nMLb9jTkyQBdIz/wx2J9PS/kS5CI6XT1\n8+2QDSaCsj7C+cr1DoimV538D1xR9qp1ucyJsWeqmQKBgQC231jIrQ0vayrdB5XR\nOP+GbnLdT7j5OjHC+1Qc1+ggk0giB817j4MAyLCvO5LBRRfpDeqDo/LnIaL2qce2\nKb0myybb5AIgbIZWK3p3flfXqkV0SII9h2UKpzXU5GoXTyg2tm7VAh87HDAHNA5p\n6WnDBOc0VIMLgdJocKUptby4Ag==\n-----END PRIVATE KEY-----\n"
 @st.cache_resource
 def init_firebase():
     try:
         if not firebase_admin._apps:
-            if not os.path.exists(CERT_FILE):
-                st.error(f"❌ Certificate '{CERT_FILE}' missing.")
-                return False
-            cred = credentials.Certificate(service_account_info)
-            firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+            # Check for Streamlit Cloud Secrets
+            if "firebase" in st.secrets:
+                fb_credentials = dict(st.secrets["firebase"])
+                
+                # --- THE FIX ---
+                # This ensures any literal "\n" strings are converted to actual newlines
+                # and removes any accidental double-backslashes.
+                if "private_key" in fb_credentials:
+                    fb_credentials["private_key"] = fb_credentials["private_key"]
+                
+                cred = credentials.Certificate(fb_credentials)
+                firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                return True
+            else:
+                # Local development fallback
+                CERT_FILE = "my-home-a6d27-firebase-adminsdk-fbsvc-795dff0005.json"
+                if os.path.exists(CERT_FILE):
+                    cred = credentials.Certificate(CERT_FILE)
+                    firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                    return True
+                else:
+                    st.error("❌ Firebase Secrets missing in Streamlit Cloud. Please add them in Settings > Secrets.")
+                    return False
         return True
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
@@ -40,6 +54,9 @@ def load_data(file):
         with open(file, "r") as f:
             try: return json.load(f)
             except: return {}
+    # Initial default user if file doesn't exist
+    if file == "users.json":
+        return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
 def save_data(file, data):
@@ -59,12 +76,8 @@ def sync_to_firebase(node_name, value):
 def fetch_initial_state():
     if not firebase_ready: return
     try:
-        st.warning("7mada1")
         ref = db.reference("users/Reciption")
-        st.warning("7mada2")
         data = ref.get()
-        st.warning("7mada3")
-        st.warning(data)
         if data:
             for key in light_keys:
                 if key in data:
@@ -112,7 +125,6 @@ def apply_scene(scene_name, user_scenes):
 def logout():
     for key in ["logged_in", "user_name", "show_settings", "change_pwd_mode", "customize_mode"]:
         st.session_state[key] = False
-    # Note: st.rerun() is not needed here as it is a callback
 
 # --- 6. APP LOGIC FLOW ---
 if not st.session_state.logged_in:
@@ -140,9 +152,9 @@ else:
         st.button("⚙️ Settings", use_container_width=True, on_click=lambda: st.session_state.update({"show_settings": not st.session_state.show_settings}))
         st.button("🚪 Logout", use_container_width=True, on_click=logout)
         st.divider()
-        st.caption(f"{user_id}: {usr_dict[user_id].get('Description', 'User')}")
+        st.caption(f"User: {user_id}")
 
-    st.title(f"Welcome back!")
+    st.title(f"Welcome back, {user_id}!")
 
     # --- SETTINGS CONTAINER ---
     if st.session_state.show_settings:
@@ -165,12 +177,6 @@ else:
                     if user_scenes: st.session_state.edit_mode_selection = "Select"
                     else: st.toast("No modes found.")
 
-            # --- SUCCESS MESSAGES ---
-            if "status_message" in st.session_state:
-                st.success(st.session_state.status_message)
-                del st.session_state.status_message
-
-            # --- EDIT MODE SELECTION ---
             if st.session_state.edit_mode_selection:
                 st.write("---")
                 options = ["Select"] + list(user_scenes.keys())
@@ -179,14 +185,13 @@ else:
                     st.session_state.edit_mode_selection = sel
                     st.session_state.customize_mode = True
 
-            # --- ADD/EDIT MODE FORM ---
             if st.session_state.customize_mode:
                 is_edit = st.session_state.edit_mode_selection and st.session_state.edit_mode_selection != "Select"
                 curr_name = st.session_state.edit_mode_selection if is_edit else ""
                 curr_vals = user_scenes.get(curr_name, {k: False for k in light_keys})
                 
                 st.write("---")
-                st.subheader(f"{'Edit' if is_edit else 'Add New'} Mode Configuration")
+                st.subheader(f"{'Edit' if is_edit else 'Add New'} Mode")
                 with st.form("mode_form"):
                     new_name = st.text_input("Mode Name", value=curr_name)
                     c1, c2 = st.columns(2)
@@ -202,11 +207,10 @@ else:
                             if is_edit and new_name != curr_name: del all_scenes[user_id][curr_name]
                             all_scenes[user_id][new_name] = new_conf
                             save_data(SCENE_FILE, all_scenes)
-                            st.session_state.status_message = f"✅ Mode '{new_name}' saved successfully!"
+                            st.success(f"Mode '{new_name}' saved!")
                             st.rerun()
                         else: st.error("Mode name is required.")
 
-            # --- PASSWORD CHANGE FORM ---
             if st.session_state.change_pwd_mode:
                 st.write("---")
                 with st.form("pwd_f"):
@@ -215,15 +219,12 @@ else:
                         if new_p:
                             usr_dict[user_id]["password"] = hash_password(new_p)
                             save_data(DB_FILE, usr_dict)
-                            st.session_state.status_message = "✅ Password updated and hashed!"
+                            st.success("Password updated!")
                             st.session_state.change_pwd_mode = False
                             st.rerun()
-                        else: st.error("Password cannot be empty.")
 
             if st.button("✖️ Close Settings", use_container_width=True):
                 st.session_state.show_settings = False
-                st.session_state.customize_mode = False
-                st.session_state.edit_mode_selection = None
                 st.rerun()
 
     st.write("---")
