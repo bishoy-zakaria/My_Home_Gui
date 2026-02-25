@@ -1,0 +1,24 @@
+{
+    "bishoy_zakaria": {
+        "Romantic": {
+            "LedSide_State": true,
+            "Magnetic_State": false,
+            "Spots_State": false,
+            "LED_State": true
+        },
+        "sleep": {
+            "LedSide_State": true,
+            "Magnetic_State": false,
+            "Spots_State": false,
+            "LED_State": false
+        }
+    },
+    "mariam_onsy": {
+        "Sleep": {
+            "led_side": true,
+            "magnetic": false,
+            "spots": false,
+            "led_profile": false
+        }
+    }
+}
