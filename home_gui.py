@@ -7,17 +7,27 @@ import os
 
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
-CERT_FILE = "my-home-a6d27-firebase-adminsdk-fbsvc-795dff0005.json"
 
 @st.cache_resource
 def init_firebase():
     try:
         if not firebase_admin._apps:
-            if not os.path.exists(CERT_FILE):
-                st.error(f"❌ Certificate '{CERT_FILE}' missing.")
-                return False
-            cred = credentials.Certificate(CERT_FILE)
-            firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+            # Check for Streamlit Cloud Secrets
+            if "firebase" in st.secrets:
+                fb_credentials = dict(st.secrets["firebase"])
+                cred = credentials.Certificate(fb_credentials)
+                firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                return True
+            else:
+                # Local development fallback
+                CERT_FILE = "my-home-a6d27-firebase-adminsdk-fbsvc-795dff0005.json"
+                if os.path.exists(CERT_FILE):
+                    cred = credentials.Certificate(CERT_FILE)
+                    firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                    return True
+                else:
+                    st.error("❌ Firebase Configuration Missing. Please add Secrets to Streamlit Cloud.")
+                    return False
         return True
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
@@ -37,6 +47,9 @@ def load_data(file):
         with open(file, "r") as f:
             try: return json.load(f)
             except: return {}
+    # Default data if file is missing
+    if file == "users.json":
+        return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
 def save_data(file, data):
@@ -105,7 +118,6 @@ def apply_scene(scene_name, user_scenes):
 def logout():
     for key in ["logged_in", "user_name", "show_settings", "change_pwd_mode", "customize_mode"]:
         st.session_state[key] = False
-    # Note: st.rerun() is not needed here as it is a callback
 
 # --- 6. APP LOGIC FLOW ---
 if not st.session_state.logged_in:
@@ -133,9 +145,9 @@ else:
         st.button("⚙️ Settings", use_container_width=True, on_click=lambda: st.session_state.update({"show_settings": not st.session_state.show_settings}))
         st.button("🚪 Logout", use_container_width=True, on_click=logout)
         st.divider()
-        st.caption(f"{user_id}: {usr_dict[user_id].get('Description', 'User')}")
+        st.caption(f"User: {user_id}")
 
-    st.title(f"Welcome back!")
+    st.title(f"Welcome back, {user_id}!")
 
     # --- SETTINGS CONTAINER ---
     if st.session_state.show_settings:
@@ -158,12 +170,6 @@ else:
                     if user_scenes: st.session_state.edit_mode_selection = "Select"
                     else: st.toast("No modes found.")
 
-            # --- SUCCESS MESSAGES ---
-            if "status_message" in st.session_state:
-                st.success(st.session_state.status_message)
-                del st.session_state.status_message
-
-            # --- EDIT MODE SELECTION ---
             if st.session_state.edit_mode_selection:
                 st.write("---")
                 options = ["Select"] + list(user_scenes.keys())
@@ -172,14 +178,13 @@ else:
                     st.session_state.edit_mode_selection = sel
                     st.session_state.customize_mode = True
 
-            # --- ADD/EDIT MODE FORM ---
             if st.session_state.customize_mode:
                 is_edit = st.session_state.edit_mode_selection and st.session_state.edit_mode_selection != "Select"
                 curr_name = st.session_state.edit_mode_selection if is_edit else ""
                 curr_vals = user_scenes.get(curr_name, {k: False for k in light_keys})
                 
                 st.write("---")
-                st.subheader(f"{'Edit' if is_edit else 'Add New'} Mode Configuration")
+                st.subheader(f"{'Edit' if is_edit else 'Add New'} Mode")
                 with st.form("mode_form"):
                     new_name = st.text_input("Mode Name", value=curr_name)
                     c1, c2 = st.columns(2)
@@ -195,11 +200,10 @@ else:
                             if is_edit and new_name != curr_name: del all_scenes[user_id][curr_name]
                             all_scenes[user_id][new_name] = new_conf
                             save_data(SCENE_FILE, all_scenes)
-                            st.session_state.status_message = f"✅ Mode '{new_name}' saved successfully!"
+                            st.success(f"Mode '{new_name}' saved!")
                             st.rerun()
                         else: st.error("Mode name is required.")
 
-            # --- PASSWORD CHANGE FORM ---
             if st.session_state.change_pwd_mode:
                 st.write("---")
                 with st.form("pwd_f"):
@@ -208,15 +212,12 @@ else:
                         if new_p:
                             usr_dict[user_id]["password"] = hash_password(new_p)
                             save_data(DB_FILE, usr_dict)
-                            st.session_state.status_message = "✅ Password updated and hashed!"
+                            st.success("Password updated!")
                             st.session_state.change_pwd_mode = False
                             st.rerun()
-                        else: st.error("Password cannot be empty.")
 
             if st.button("✖️ Close Settings", use_container_width=True):
                 st.session_state.show_settings = False
-                st.session_state.customize_mode = False
-                st.session_state.edit_mode_selection = None
                 st.rerun()
 
     st.write("---")
@@ -233,7 +234,7 @@ else:
         st.toggle("Spots", key="Spots_State", on_change=handle_toggle, args=("Spots_State",))
         st.toggle("Led Profile", key="LED_State", on_change=handle_toggle, args=("LED_State",))
 
-    # --- DYNAMIC MODE BUTTONS ---
+    # --- MODE BUTTONS ---
     if user_scenes:
         st.subheader("🎭 Your Modes")
         cols = st.columns(3)
