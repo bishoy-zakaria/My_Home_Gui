@@ -21,21 +21,12 @@ def init_firebase():
                 # and removes any accidental double-backslashes.
                 if "private_key" in fb_credentials:
                     fb_credentials["private_key"] = fb_credentials["private_key"]
-                
-                cred = credentials.Certificate(fb_credentials)
-                firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
-                return True
-            else:
-                # Local development fallback
-                CERT_FILE = "my-home-a6d27-firebase-adminsdk-fbsvc-795dff0005.json"
-                if os.path.exists(CERT_FILE):
-                    cred = credentials.Certificate(CERT_FILE)
+                    cred = credentials.Certificate(fb_credentials)
                     firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
                     return True
-                else:
-                    st.error("❌ Firebase Secrets missing in Streamlit Cloud. Please add them in Settings > Secrets.")
-                    return False
-        return True
+        
+            else:
+                return False
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
         return False
