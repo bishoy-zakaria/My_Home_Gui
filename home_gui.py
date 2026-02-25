@@ -15,6 +15,13 @@ def init_firebase():
             # Check for Streamlit Cloud Secrets
             if "firebase" in st.secrets:
                 fb_credentials = dict(st.secrets["firebase"])
+                
+                # --- THE FIX ---
+                # This ensures any literal "\n" strings are converted to actual newlines
+                # and removes any accidental double-backslashes.
+                if "private_key" in fb_credentials:
+                    fb_credentials["private_key"] = fb_credentials["private_key"].replace("\\n", "\n")
+                
                 cred = credentials.Certificate(fb_credentials)
                 firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
                 return True
@@ -26,7 +33,7 @@ def init_firebase():
                     firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
                     return True
                 else:
-                    st.error("❌ Firebase Configuration Missing. Please add Secrets to Streamlit Cloud.")
+                    st.error("❌ Firebase Secrets missing in Streamlit Cloud. Please add them in Settings > Secrets.")
                     return False
         return True
     except Exception as e:
@@ -47,7 +54,7 @@ def load_data(file):
         with open(file, "r") as f:
             try: return json.load(f)
             except: return {}
-    # Default data if file is missing
+    # Initial default user if file doesn't exist
     if file == "users.json":
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
@@ -234,7 +241,7 @@ else:
         st.toggle("Spots", key="Spots_State", on_change=handle_toggle, args=("Spots_State",))
         st.toggle("Led Profile", key="LED_State", on_change=handle_toggle, args=("LED_State",))
 
-    # --- MODE BUTTONS ---
+    # --- DYNAMIC MODE BUTTONS ---
     if user_scenes:
         st.subheader("🎭 Your Modes")
         cols = st.columns(3)
