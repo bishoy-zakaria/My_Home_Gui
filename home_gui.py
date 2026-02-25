@@ -63,6 +63,7 @@ def fetch_initial_state():
         ref = db.reference("users/Reciption")
         st.warning("7mada2")
         data = ref.get()
+        st.warning("7mada3")
         st.warning(data)
         if data:
             for key in light_keys:
