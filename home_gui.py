@@ -61,6 +61,7 @@ def fetch_initial_state():
     try:
         ref = db.reference("users/Reciption")
         data = ref.get()
+        st.warning(data)
         if data:
             for key in light_keys:
                 if key in data:
