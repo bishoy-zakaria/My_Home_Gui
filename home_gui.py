@@ -73,7 +73,7 @@ def sync_to_firebase(node_name, value):
     except Exception as e:
         st.error(f"📡 Sync Error: {node_name} failed.")
 
-@st.fragment(run_every=1)
+@st.fragment(run_every=5)
 def fetch_priodic_state():
     if not firebase_ready: return
     try: 
