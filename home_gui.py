@@ -8,7 +8,10 @@ import time
 
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
-
+def save_data(file, data):
+    with open(file, "w") as f:
+        json.dump(data, f, indent=4)
+        
 @st.cache_resource
 def init_firebase():
     try:
@@ -57,9 +60,6 @@ def load_data(file):
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
-def save_data(file, data):
-    with open(file, "w") as f:
-        json.dump(data, f, indent=4)
 
 # --- 3. FIREBASE SYNC FUNCTIONS ---
 def sync_to_firebase(node_name, value):
