@@ -73,13 +73,15 @@ def sync_to_firebase(node_name, value):
 
 def fetch_initial_state():
     if not firebase_ready: return
-    try:
+    try: 
         ref = db.reference("users/Reciption")
         data = ref.get()
         if data:
             for key in light_keys:
-                if key in data:
-                    st.session_state[key] = bool(data[key])
+                ref = db.reference("users/Reciption/"+key)
+                data = ref.get()
+                st.session_state[key] = bool(data[key])
+            st.success("Data restored Successfully!")
     except Exception as e:
         st.warning("⚠️ Cloud unreachable. Using local states.")
 
