@@ -170,7 +170,7 @@ else:
         st.button("⚙️ Settings", use_container_width=True, on_click=lambda: st.session_state.update({"show_settings": not st.session_state.show_settings}))
         st.button("🚪 Logout", use_container_width=True, on_click=logout)
         st.divider()
-        st.caption(f"User: {user_id}")
+        st.caption(f"{user_id}: {usr_dict[user_id]["Description"]}")
 
     st.title(f"Welcome back, {user_id}!")
 
