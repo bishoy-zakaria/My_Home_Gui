@@ -62,6 +62,17 @@ def load_data(file):
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
+def load_cred_data():
+    if not firebase_ready: return
+    ref = db.reference("users/Cred")
+    data = ref.get()
+    try: return json.load(data)
+    except: return {}
+    
+    # Initial default user if file doesn't exist
+    if file == "users.json":
+        return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
+    return {}
 
 # --- 3. FIREBASE SYNC FUNCTIONS ---
 def sync_to_firebase(node_name, value):
@@ -104,9 +115,8 @@ for key in light_keys:
     if key not in st.session_state:
         st.session_state[key] = False
 
-DB_FILE = "users.json"
 SCENE_FILE = "scenes.json"
-usr_dict = load_data(DB_FILE)
+usr_dict = load_cred_data()
 all_scenes = load_data(SCENE_FILE)
 
 # --- 5. CALLBACK FUNCTIONS ---
