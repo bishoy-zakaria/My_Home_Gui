@@ -66,7 +66,7 @@ def load_cred_data():
     if not firebase_ready: return
     ref = db.reference("users/Cred")
     data = ref.get()
-    try: return json.load(data)
+    try: return data
     except: return {}
     
     # Initial default user if file doesn't exist
