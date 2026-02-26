@@ -11,7 +11,7 @@ FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
 def save_data(file, data):
     with open(file, "w") as f:
         json.dump(data, f, indent=4)
-        
+
 @st.cache_resource
 def init_firebase():
     try:
@@ -25,7 +25,7 @@ def init_firebase():
             # and removes any accidental double-backslashes.
             if "private_key" in fb_credentials:
                 save_data("temp.json", fb_credentials)
-                cred = credentials.Certificate(temp.json)
+                cred = credentials.Certificate("temp.json")
                 firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
                 time.sleep(5)
                 return len(firebase_admin._apps) > 0
