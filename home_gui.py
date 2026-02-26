@@ -6,6 +6,8 @@ import json
 import os
 import time
 
+# --- 4. SESSION STATE INITIALIZATION ---
+light_keys = ["LedSide_State", "Magnetic_State", "Spots_State", "LED_State"]
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
 def save_data(file, data):
@@ -74,19 +76,14 @@ def sync_to_firebase(node_name, value):
 def fetch_initial_state():
     if not firebase_ready: return
     try: 
-        ref = db.reference("users/Reciption")
-        data = ref.get()
-        if data:
-            for key in light_keys:
-                ref = db.reference("users/Reciption/"+key)
-                data = ref.get()
-                st.session_state[key] = bool(data[key])
-            st.success("Data restored Successfully!")
+        for key in light_keys:
+            ref = db.reference("users/Reciption/"+key)
+            data = ref.get()
+            st.session_state[key] = bool(data[key])
+        st.success("Data restored Successfully!")
     except Exception as e:
         st.warning("⚠️ Cloud unreachable. Using local states.")
 
-# --- 4. SESSION STATE INITIALIZATION ---
-light_keys = ["LedSide_State", "Magnetic_State", "Spots_State", "LED_State"]
 
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
