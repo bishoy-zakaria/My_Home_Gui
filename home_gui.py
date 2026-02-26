@@ -62,9 +62,9 @@ def load_data(file):
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
-def load_cred_data():
+def load_cred_data(db_node):
     if not firebase_ready: return
-    ref = db.reference("users/Cred")
+    ref = db.reference(db_node)
     data = ref.get()
     try: return data
     except: return {}
@@ -74,9 +74,9 @@ def load_cred_data():
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
-def user_data(data_dict):
+def user_data(data_dict , db_node):
     if not firebase_ready: return
-    ref = db.reference("users/Cred")
+    ref = db.reference(db_node)
     ref.set(data_dict)
 
 # --- 3. FIREBASE SYNC FUNCTIONS ---
@@ -120,9 +120,8 @@ for key in light_keys:
     if key not in st.session_state:
         st.session_state[key] = False
 
-SCENE_FILE = "scenes.json"
-usr_dict = load_cred_data()
-all_scenes = load_data(SCENE_FILE)
+usr_dict = load_cred_data("users/Cred")
+all_scenes = load_cred_data("users/Scenes")
 
 # --- 5. CALLBACK FUNCTIONS ---
 def handle_toggle(key):
@@ -224,7 +223,7 @@ else:
                             if user_id not in all_scenes: all_scenes[user_id] = {}
                             if is_edit and new_name != curr_name: del all_scenes[user_id][curr_name]
                             all_scenes[user_id][new_name] = new_conf
-                            save_data(SCENE_FILE, all_scenes)
+                            user_data(all_scenes , "users/Scenes")
                             st.success(f"Mode '{new_name}' saved!")
                             st.rerun()
                         else: st.error("Mode name is required.")
@@ -236,7 +235,7 @@ else:
                     if st.form_submit_button("Update Password"):
                         if new_p:
                             usr_dict[user_id]["password"] = hash_password(new_p)
-                            user_data(usr_dict)
+                            user_data(usr_dict , "users/Cred")
                             st.success("Password updated!")
                             st.session_state.change_pwd_mode = False
                             st.rerun()
