@@ -73,14 +73,21 @@ def sync_to_firebase(node_name, value):
     except Exception as e:
         st.error(f"📡 Sync Error: {node_name} failed.")
 
-def fetch_initial_state():
+@st.fragment(run_every=1)
+def fetch_priodic_state():
     if not firebase_ready: return
     try: 
         for key in light_keys:
             ref = db.reference("users/Reciption/"+key)
             data = ref.get()
             st.session_state[key] = bool(data)
-        st.success("Data restored Successfully!")
+        t_col1, t_col2 = st.columns(2)
+        with t_col1:
+            st.toggle("LED Side", key="LedSide_State", on_change=handle_toggle, args=("LedSide_State",))
+            st.toggle("Magnetic Lights", key="Magnetic_State", on_change=handle_toggle, args=("Magnetic_State",))
+        with t_col2:
+            st.toggle("Spots", key="Spots_State", on_change=handle_toggle, args=("Spots_State",))
+            st.toggle("Led Profile", key="LED_State", on_change=handle_toggle, args=("LED_State",))
     except Exception as e:
         st.warning("⚠️ Cloud unreachable. Using local states.")
 
@@ -92,7 +99,6 @@ if "logged_in" not in st.session_state:
     st.session_state.change_pwd_mode = False
     st.session_state.customize_mode = False
     st.session_state.edit_mode_selection = None
-    fetch_initial_state()
 
 for key in light_keys:
     if key not in st.session_state:
@@ -230,13 +236,7 @@ else:
     st.subheader("💡 Lighting Control")
     if not firebase_ready: st.warning("Offline Mode: Cloud sync disabled.")
 
-    t_col1, t_col2 = st.columns(2)
-    with t_col1:
-        st.toggle("LED Side", key="LedSide_State", on_change=handle_toggle, args=("LedSide_State",))
-        st.toggle("Magnetic Lights", key="Magnetic_State", on_change=handle_toggle, args=("Magnetic_State",))
-    with t_col2:
-        st.toggle("Spots", key="Spots_State", on_change=handle_toggle, args=("Spots_State",))
-        st.toggle("Led Profile", key="LED_State", on_change=handle_toggle, args=("LED_State",))
+    fetch_priodic_state()
 
     # --- DYNAMIC MODE BUTTONS ---
     if user_scenes:
