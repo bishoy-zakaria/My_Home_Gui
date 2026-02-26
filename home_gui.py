@@ -15,30 +15,28 @@ def init_firebase():
         
         # 1. Access the secrets from Streamlit (parsed from your TOML)
         firebase_info = dict(st.secrets["firebase"])
-        
+
         # 2. Create a temporary file to hold the JSON
         # 'delete=False' is important because some OSs won't let Firebase 
         # open the file if Python still has it "locked" for writing.
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
             json.dump(firebase_info, temp_file)
             temp_path = temp_file.name
-        
+
         try:
             # 3. Initialize Firebase using the path to our new temp file
             if not firebase_admin._apps:
                 cred = credentials.Certificate(temp_path)
                 firebase_admin.initialize_app(cred)
                 st.success("Firebase initialized via temporary JSON file!")
-        
+
         finally:
             # 4. Clean up: Delete the file from the server after initialization
             if os.path.exists(temp_path):
                 os.remove(temp_path)
-        
+                return True
+
     
-        else:
-            st.error(f"⚠️ firebase is not in secrets{e}")
-            return False
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
         return False
