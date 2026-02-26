@@ -13,30 +13,27 @@ FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
 def init_firebase():
     try:
         
-        # 1. Access the secrets from Streamlit (parsed from your TOML)
-        firebase_info = dict(st.secrets["firebase"])
-
-        # 2. Create a temporary file to hold the JSON
-        # 'delete=False' is important because some OSs won't let Firebase 
-        # open the file if Python still has it "locked" for writing.
-        with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.json') as temp_file:
-            json.dump(firebase_info, temp_file)
-            temp_path = temp_file.name
-
-        try:
-            # 3. Initialize Firebase using the path to our new temp file
-            if not firebase_admin._apps:
-                cred = credentials.Certificate(temp_path)
-                firebase_admin.initialize_app(cred)
-                st.success("Firebase initialized via temporary JSON file!")
-
-        finally:
-            # 4. Clean up: Delete the file from the server after initialization
-            if os.path.exists(temp_path):
-                os.remove(temp_path)
-                return True
+        # Check for Streamlit Cloud Secrets
+        if "firebase" in st.secrets:
+            fb_credentials = dict(st.secrets["firebase"])
+            
+            # --- THE FIX ---
+            # This ensures any literal "\n" strings are converted to actual newlines
+            # and removes any accidental double-backslashes.
+            if "private_key" in fb_credentials:
+                save_data("temp.json", fb_credentials)
+                cred = credentials.Certificate(temp.json)
+                firebase_admin.initialize_app(cred, {'databaseURL': FIREBASE_DB_URL})
+                time.sleep(5)
+                return len(firebase_admin._apps) > 0
+            else:
+                st.error(f"⚠️ private_key is not in fb_credentials")
+                return False
 
     
+        else:
+            st.error(f"⚠️ firebase is not in secrets{e}")
+            return False
     except Exception as e:
         st.error(f"⚠️ Firebase Connection Failed: {e}")
         return False
