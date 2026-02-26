@@ -79,7 +79,7 @@ def fetch_initial_state():
         for key in light_keys:
             ref = db.reference("users/Reciption/"+key)
             data = ref.get()
-            st.session_state[key] = bool(data[key])
+            st.session_state[key] = bool(data)
         st.success("Data restored Successfully!")
     except Exception as e:
         st.warning("⚠️ Cloud unreachable. Using local states.")
