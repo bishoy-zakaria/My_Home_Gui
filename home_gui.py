@@ -74,6 +74,11 @@ def load_cred_data():
         return {"admin": {"password": hash_password("1234"), "Description": "Main Admin"}}
     return {}
 
+def user_data(data_dict):
+    if not firebase_ready: return
+    ref = db.reference("users/Cred")
+    ref.set(data_dict)
+
 # --- 3. FIREBASE SYNC FUNCTIONS ---
 def sync_to_firebase(node_name, value):
     if not firebase_ready: return
@@ -231,7 +236,7 @@ else:
                     if st.form_submit_button("Update Password"):
                         if new_p:
                             usr_dict[user_id]["password"] = hash_password(new_p)
-                            save_data(DB_FILE, usr_dict)
+                            user_data(usr_dict)
                             st.success("Password updated!")
                             st.session_state.change_pwd_mode = False
                             st.rerun()
