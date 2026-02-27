@@ -1,4 +1,5 @@
 import streamlit as st
+from streamlit_echarts import st_echarts
 import firebase_admin
 from firebase_admin import credentials, db
 import hashlib
@@ -156,9 +157,8 @@ def fetch_priodic_state():
 
         # Display the gauge
         st_echarts(options=gauge_options, height="350px")
-
-        #st.divider()
-        st.warning(int(st.session_state.Sum_power))
+        st.divider()
+        
         t_col1, t_col2 = st.columns(2)
         with t_col1:
             st.toggle("LED Side", key="LedSide_State", on_change=handle_toggle, args=("LedSide_State",))
