@@ -140,7 +140,7 @@ def fetch_priodic_state():
                     "axisLine": {
                         "lineStyle": {
                             "width": 8,
-                            "color": [[0.2, "#8AE01F"], [0.4, "#DEDA0D"], [0.8, "#F5AA00"],[1, "#ED0909"]]
+                            "color": [[0.35, "#8AE01F"], [0.6, "#DEDA0D"], [0.8, "#F5AA00"],[1, "#ED0909"]]
                         }
                     },
                     "pointer": {"width": 4},
