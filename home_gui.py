@@ -9,8 +9,6 @@ import time
 
 light_keys = ["LedSide_State", "Magnetic_State", "Spots_State", "LED_State"]
 
-Sum_power = 0
-
 power_dict = {
     "LedSide_State":
     {
@@ -121,12 +119,12 @@ def sync_to_firebase(node_name, value):
 def power_priodic_calc():
     if not firebase_ready: return
     try: 
-        Sum_power = 0
+        st.session_state.Sum_power = 0
         for key in light_keys:
             ref = db.reference("users/Reciption/"+key)
             data = ref.get()
             power_dict[key]["current_value"] = bool(data) * power_dict[key]["fixed_value"]
-            Sum_power = Sum_power + power_dict[key]["current_value"]
+            st.session_state.Sum_power = st.session_state.Sum_power + power_dict[key]["current_value"]
     except Exception as e:
         st.error(f"📡 power_priodic_calc Error: {node_name} failed.")
 
@@ -145,7 +143,7 @@ def fetch_priodic_state():
                 "min": 0,
                 "max": 5000,
                 "detail": {"formatter": "{value} W", "fontSize": 20},
-                "data": [{"value": int(Sum_power), "name": "Real-time Load"}],
+                "data": [{"value": int(st.session_state.Sum_power), "name": "Real-time Load"}],
                 "axisLine": {
                     "lineStyle": {
                         "width": 10,
