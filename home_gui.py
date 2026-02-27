@@ -11,8 +11,7 @@ light_keys = ["LedSide_State", "Magnetic_State", "Spots_State", "LED_State"]
 
 Sum_power = 0
 
-power_dict = 
-{
+power_dict = {
     "LedSide_State":
     {
         "current_value":0,
