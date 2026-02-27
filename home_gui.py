@@ -137,26 +137,26 @@ def fetch_priodic_state():
             ref = db.reference("users/Reciption/"+key)
             data = ref.get()
             st.session_state[key] = bool(data)
-        #gauge_options = {
-        #    "series": [{
-        #        "type": "gauge",
-        #        "min": 0,
-        #        "max": 5000,
-        #        "detail": {"formatter": "{value} W", "fontSize": 20},
-        #        "data": [{"value": int(st.session_state.Sum_power), "name": "Real-time Load"}],
-        #        "axisLine": {
-        #            "lineStyle": {
-        #                "width": 10,
-        #                "color": [[0.3, "#67e0e3"], [0.7, "#37a2da"], [1, "#fd666d"]]
-        #            }
-        #        },
-        #        "pointer": {"width": 5}
-        #    }]
-        #}
-#
-        ## Display the gauge
-        #st_echarts(options=gauge_options, height="350px")
-#
+        gauge_options = {
+            "series": [{
+                "type": "gauge",
+                "min": 0,
+                "max": 5000,
+                "detail": {"formatter": "{value} W", "fontSize": 20},
+                "data": [{"value": int(st.session_state.Sum_power), "name": "Real-time Load"}],
+                "axisLine": {
+                    "lineStyle": {
+                        "width": 10,
+                        "color": [[0.3, "#67e0e3"], [0.7, "#37a2da"], [1, "#fd666d"]]
+                    }
+                },
+                "pointer": {"width": 5}
+            }]
+        }
+
+        # Display the gauge
+        st_echarts(options=gauge_options, height="350px")
+
         #st.divider()
         st.warning(int(st.session_state.Sum_power))
         t_col1, t_col2 = st.columns(2)
