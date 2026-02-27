@@ -119,15 +119,13 @@ def sync_to_firebase(node_name, value):
 
 @st.fragment(run_every=1)
 def power_priodic_calc():
-    if not firebase_ready: return
-    try: 
-        Sum_power = 0
-        for key in light_keys:
-            ref = db.reference("users/Reciption/"+key)
-            data = ref.get()
-            power_dict[key]["current_value"] = bool(data) * power_dict[key]["fixed_value"]
-            Sum_power = Sum_power + power_dict[key]["current_value"]
-
+    if not firebase_ready: return 
+    Sum_power = 0
+    for key in light_keys:
+        ref = db.reference("users/Reciption/"+key)
+        data = ref.get()
+        power_dict[key]["current_value"] = bool(data) * power_dict[key]["fixed_value"]
+        Sum_power = Sum_power + power_dict[key]["current_value"]
 
 @st.fragment(run_every=5)
 def fetch_priodic_state():
