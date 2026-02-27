@@ -6,8 +6,37 @@ import json
 import os
 import time
 
-# --- 4. SESSION STATE INITIALIZATION ---
+
 light_keys = ["LedSide_State", "Magnetic_State", "Spots_State", "LED_State"]
+
+Sum_power = 0
+
+power_dict = 
+{
+    "LedSide_State":
+    {
+        "current_value":0,
+        "fixed_value": 200 #Watt
+    },
+
+    "Magnetic_State":
+    {
+        "current_value":0,
+        "fixed_value": 180 #Watt
+    },
+
+    "Spots_State":
+    {
+        "current_value":0,
+        "fixed_value": 150 #Watt
+    },
+
+    "LED_State":
+    {
+        "current_value":0,
+        "fixed_value": 200 #Watt
+    },
+}
 # --- 1. FIREBASE SETUP ---
 FIREBASE_DB_URL = "https://my-home-a6d27-default-rtdb.firebaseio.com/"
 def save_data(file, data):
@@ -89,6 +118,18 @@ def sync_to_firebase(node_name, value):
     except Exception as e:
         st.error(f"📡 Sync Error: {node_name} failed.")
 
+@st.fragment(run_every=1)
+def power_priodic_calc():
+    if not firebase_ready: return
+    try: 
+        Sum_power = 0
+        for key in light_keys:
+            ref = db.reference("users/Reciption/"+key)
+            data = ref.get()
+            power_dict[key]["current_value"] = bool(data) * power_dict[key]["fixed_value"]
+            Sum_power = Sum_power + power_dict[key]["current_value"]
+
+
 @st.fragment(run_every=5)
 def fetch_priodic_state():
     if not firebase_ready: return
@@ -97,13 +138,36 @@ def fetch_priodic_state():
             ref = db.reference("users/Reciption/"+key)
             data = ref.get()
             st.session_state[key] = bool(data)
+        gauge_options = {
+            "series": [{
+                "type": "gauge",
+                "min": 0,
+                "max": 5000,
+                "detail": {"formatter": "{value} W", "fontSize": 20},
+                "data": [{"value": Sum_power, "name": "Real-time Load"}],
+                "axisLine": {
+                    "lineStyle": {
+                        "width": 10,
+                        "color": [[0.3, "#67e0e3"], [0.7, "#37a2da"], [1, "#fd666d"]]
+                    }
+                },
+                "pointer": {"width": 5}
+            }]
+        }
+        
+        # Display the gauge
+        st_echarts(options=gauge_options, height="350px")
+        
+        st.divider()
+        
         t_col1, t_col2 = st.columns(2)
         with t_col1:
-            st.toggle("LED Side", key="LedSide_State", on_change=handle_toggle, args=("LedSide_State",))
-            st.toggle("Magnetic Lights", key="Magnetic_State", on_change=handle_toggle, args=("Magnetic_State",))
+            st.toggle("LED Side", key="LedSide_State")
+            st.toggle("Magnetic Lights", key="Magnetic_State")
         with t_col2:
-            st.toggle("Spots", key="Spots_State", on_change=handle_toggle, args=("Spots_State",))
-            st.toggle("Led Profile", key="LED_State", on_change=handle_toggle, args=("LED_State",))
+            st.toggle("Spots", key="Spots_State")
+            st.toggle("Led Profile", key="LED_State")
+        
     except Exception as e:
         st.warning("⚠️ Cloud unreachable. Using local states.")
 
@@ -250,6 +314,7 @@ else:
     st.subheader("💡 Lighting Control")
     if not firebase_ready: st.warning("Offline Mode: Cloud sync disabled.")
 
+    power_priodic_calc()
     fetch_priodic_state()
 
     # --- DYNAMIC MODE BUTTONS ---
