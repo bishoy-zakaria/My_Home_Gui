@@ -127,6 +127,8 @@ def power_priodic_calc():
             data = ref.get()
             power_dict[key]["current_value"] = bool(data) * power_dict[key]["fixed_value"]
             Sum_power = Sum_power + power_dict[key]["current_value"]
+    except Exception as e:
+        st.error(f"📡 power_priodic_calc Error: {node_name} failed.")
 
 
 @st.fragment(run_every=5)
